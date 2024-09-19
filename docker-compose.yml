@@ -1,0 +1,73 @@
+services:
+  mysql:
+    image: mysql:8.0.32
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - my_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    restart: always
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    depends_on:
+      - mysql
+    networks:
+      - my_network
+    ports:
+      - "8082:80"
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+
+  wordpress:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_NAME: ${WORDPRESS_DB_NAME}
+      WORDPRESS_DB_USER: ${WORDPRESS_DB_USER}
+      WORDPRESS_DB_PASSWORD: ${WORDPRESS_DB_PASSWORD}
+    depends_on:
+      - mysql
+    networks:
+      - my_network
+    ports:
+      - "8081:80"
+    volumes:
+      - wordpress_data:/var/www/html
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--fail", "http://localhost:80/"]
+      interval: 30s
+      retries: 3
+      start_period: 10s
+      timeout: 10s
+ 
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  wordpress_data:
