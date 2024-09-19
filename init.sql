@@ -1,0 +1,6 @@
+CREATE DATABASE IF NOT EXISTS wordpress;
+CREATE DATABASE IF NOT EXISTS sentry;
+CREATE USER IF NOT EXISTS 'user_name'@'%' IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON wordpress.* TO 'user_name'@'%';
+GRANT ALL PRIVILEGES ON sentry.* TO 'user_name'@'%';
+FLUSH PRIVILEGES;
